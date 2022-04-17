@@ -1,0 +1,137 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'hadi_funnel_web
+
+  Sales funnel for HADI
+
+  '
+Globals:
+  Function:
+    Timeout: 3
+Resources:
+  HADIFunnel:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: HADIFunnel
+      Handler: lambda.handler
+      Runtime: ruby2.7
+      Architectures:
+      - x86_64
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: MDL.HADI.FUNNEL.TXN
+      Events:
+        NewCustomerForm:
+          Type: Api
+          Properties:
+            Path: /funnel/new_customer
+            Method: get
+        NewCustomer:
+          Type: Api
+          Properties:
+            Path: /funnel/new_customer
+            Method: post
+        EmailThanks:
+          Type: Api
+          Properties:
+            Path: /funnel/email_thanks
+            Method: get
+    Metadata:
+      SamResourceId: HADIFunnel
+  Funnelapi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: Funnelapi
+      StageName: Prod
+      DefinitionBody:
+        swagger: '2.0'
+        basePath: /funnel
+        paths:
+          /funnel/{proxy+}:
+            x-amazon-apigateway-any-method:
+              responses: {}
+              x-amazon-apigateway-integration:
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${HADIFunnel.Arn}/invocations
+                passthroughBehavior: when_no_match
+                httpMethod: GET
+                type: aws_proxy
+  CloudFrontOriginAccessIdentity:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: HADI Funnel OA
+  CloudfrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Comment: Cloudfront distribution for HADI funnel
+        DefaultRootObject: index.html
+        Enabled: true
+        HttpVersion: http2
+        Logging:
+          IncludeCookies: 'false'
+          Bucket: mdl-hadi-logs.s3.amazonaws.com
+          Prefix: funnel
+        Origins:
+        - Id: HADI-funnel-s3
+          DomainName: mdl-hadi-funnel.s3.amazonaws.com
+          S3OriginConfig:
+            OriginAccessIdentity:
+              Fn::Sub: origin-access-identity/cloudfront/${CloudFrontOriginAccessIdentity}
+        - Id: HADI-funnel-api
+          DomainName:
+            Fn::Sub: ${Funnelapi}.execute-api.${AWS::Region}.amazonaws.com
+          CustomOriginConfig:
+            OriginProtocolPolicy: https-only
+            HTTPPort: '80'
+            HTTPSPort: '443'
+        DefaultCacheBehavior:
+          TargetOriginId: HADI-funnel-s3
+          Compress: 'true'
+          AllowedMethods:
+          - GET
+          - HEAD
+          - OPTIONS
+          ForwardedValues:
+            QueryString: false
+          ViewerProtocolPolicy: https-only
+        CacheBehaviors:
+        - TargetOriginId: HADI-funnel-api
+          PathPattern: /funnel/*
+          ViewerProtocolPolicy: https-only
+          CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
+          OriginRequestPolicyId: d246dfe5-6564-43d8-9298-f62689b13590
+          AllowedMethods:
+          - DELETE
+          - GET
+          - HEAD
+          - OPTIONS
+          - PATCH
+          - POST
+          - PUT
+        - TargetOriginId: HADI-funnel-s3
+          PathPattern: /
+          AllowedMethods:
+          - GET
+          - HEAD
+          ViewerProtocolPolicy: allow-all
+          OriginRequestPolicyId: acba4595-bd28-49b8-b9fe-13317c0390fa
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+Outputs:
+  HADIFunnelApi:
+    Description: API Gateway endpoint URL for Prod stage for HADI Funnel
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/new_customer/
+  HADIFunnel:
+    Description: HADI Funnel Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - HADIFunnel
+      - Arn
+  HADIFunnelFunctionIamRole:
+    Description: Implicit IAM Role created for HADI Funnel
+    Value:
+      Fn::GetAtt:
+      - HADIFunnelRole
+      - Arn

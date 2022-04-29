@@ -96,7 +96,7 @@ Resources:
         - Id: HADI-funnel-api
           DomainName: !Sub '${Funnelapi}.execute-api.${AWS::Region}.amazonaws.com'
           CustomOriginConfig:
-            OriginProtocolPolicy: https-only
+            OriginProtocolPolicy: match-viewer
             HTTPPort: '80'
             HTTPSPort: '443'
         DefaultCacheBehavior:
@@ -108,11 +108,11 @@ Resources:
           - OPTIONS
           ForwardedValues:
             QueryString: false
-          ViewerProtocolPolicy : https-only
+          ViewerProtocolPolicy : redirect-to-https
         CacheBehaviors:
         - TargetOriginId: HADI-funnel-api
           PathPattern: /funnel/*
-          ViewerProtocolPolicy: https-only
+          ViewerProtocolPolicy: redirect-to-https
           CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
           OriginRequestPolicyId: d246dfe5-6564-43d8-9298-f62689b13590
           AllowedMethods:

@@ -3,7 +3,8 @@ class FunnelTxn
   set_table_name "MDL.HADI.FUNNEL.TXN"
 
   string_attr :email_address, hash_key: true
-  string_attr :sent_at, range_key: true
+  string_attr :created_at, range_key: true
+  string_attr :created_date
   string_attr :status
   string_attr :name
   string_attr :email_id

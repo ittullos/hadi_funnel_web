@@ -1,4 +1,5 @@
 require 'sinatra'
+require 'date'
 
 class HadiFunnel < Sinatra::Base
 
@@ -28,11 +29,10 @@ class HadiFunnel < Sinatra::Base
     session[:status] = "customer"
     item = FunnelTxn.new
     item.email_address = @email
-    item.sent_at = Time.new
-    item.status = "prospect"
+    item.created_at = Time.now.to_i
+    date = Time.new
+    item.created_date = "#{date.strftime("%Y")}-#{date.strftime("%m")}-#{date.strftime("%d")}"
     item.name = @name
-    item.email_id = "PRO03"
-    item.status_date = "2022-03-04"
     item.save
     redirect '/Prod/funnel/email_thanks'
   end

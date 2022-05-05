@@ -31,31 +31,57 @@ Steps to Re-Deploy (redirect to https enabled)
     * Policy already has a Cloudfront distribution listed here and
       I'm not sure where this comes from. Will append to the existing policy
 
-    * Example policy:
-
-        -
-          {
-              "Version": "2012-10-17",
-              "Id": "PolicyForCloudFrontPrivateContent",
-              "Statement": [
-                  {
-                      "Effect": "Allow",
-                      "Principal": {
-                          "AWS": "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity EH1HDMB1FH2TC"
-                      },
-                      "Action": "s3:GetObject",
-                      "Resource": "arn:aws:s3:::DOC-EXAMPLE-BUCKET/*"
-                  }
-              ]
-          }
-
-          * See documentation to find OAI
+    * See documentation to find example policy and OAI
 
     * Documentation: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html
 
     * At this point the s3 bucket is accessible by the cloudfront url
       and the home page displays
 
-5 - Change api endpoint in s3 bucket (index.html line 158) to the new api URL
+5 - Set up the custom domain name for the cloudfront distribution
 
-6 - Change api origin path inside the cloudfront console to /Prod
+    * Go into the cloudfront console and select the distribution
+
+    * Click the edit button next to the settings panel
+
+    * type "myhadi.com" in the alternate domain name section
+
+    * Click the certificte drop-down and select myhadi.com
+
+    * Go into the Route 53 console
+
+    * Click on hosted zones and then click on myhadi.com
+
+    * Delete the A record that is here currently
+
+    * Create a new record of type A
+
+    * Click the alias button and select the correct distribution from the drop down menu
+
+6 - Change api endpoint in s3 bucket (index.html line 158) to the new api URL
+
+    * Go into the API gateway console
+
+    * Select the HadiFunnel API
+
+    * Click on stages in the left panel
+
+    * Click the Prod dropdown and select the GET method for the "new_customer" path
+
+    * Copy the invoke url
+
+    * Paste it on line 158 of index.html in place of the existing url
+
+7 - Change url for css file and icon
+
+    * Copy the distribution url from the cloudfront console
+
+    * Open layout.erb
+
+    * Paste the cloudfront url in place of the base url on line 11 and 13 (keep the url path the same)
+
+8 - Change the url for the form submission
+
+    * Copy the API gateway invoke url again (See step 6)
+
+    * Paste it on line 10 of email_form.erb

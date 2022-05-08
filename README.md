@@ -85,3 +85,5 @@ Steps to Re-Deploy (redirect to https enabled)
     * Copy the API gateway invoke url again (See step 6)
 
     * Paste it on line 10 of email_form.erb
+
+Everything should be deployed and working
